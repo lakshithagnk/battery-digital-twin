@@ -152,7 +152,7 @@ export default function AppShell({ children }) {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex min-h-16 items-center gap-3 border-b border-white/10 bg-night-950/45 px-4 backdrop-blur-2xl lg:px-7">
+          <header className="relative z-20 flex min-h-16 items-center gap-3 border-b border-white/10 bg-night-950/45 px-4 backdrop-blur-2xl lg:px-7">
             <div className="lg:hidden flex h-10 w-10 items-center justify-center rounded-2xl border border-brand-cyan/30 bg-brand-cyan/15">🔋</div>
             <div>
               <h2 className="font-display text-lg font-black text-white">{pageLabel}</h2>
