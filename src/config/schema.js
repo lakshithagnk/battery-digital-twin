@@ -45,7 +45,7 @@ export const DEFAULT_SELECTED_FEATURES = [...MODEL_FEATURES]
 
 export const CLASS_LABELS = ['Normal', 'High Resist', 'Low Cap', 'Self Disch']
 
-
+export const DEFAULT_REQUEST_TIMEOUT_MS = 25000
 
 export const DEFAULT_SETTINGS = {
   apiMode: 'mock',
@@ -54,7 +54,7 @@ export const DEFAULT_SETTINGS = {
   selectedFeatures: DEFAULT_SELECTED_FEATURES,
   playbackIntervalMs: 10000,
   demoIntervalMs: 1200,
-  requestTimeoutMs: 30000,
+  requestTimeoutMs: DEFAULT_REQUEST_TIMEOUT_MS,
   live: {
     intervalMs: 10000,
     windowSize: MODEL_WINDOW_SIZE,

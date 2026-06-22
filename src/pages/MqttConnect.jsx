@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '../store/appStore'
 import { mqttManager } from '../services/mqttClient'
+import { DEFAULT_REQUEST_TIMEOUT_MS } from '../config/schema'
 import { buildPayload, parsePrediction } from '../services/apiClient'
 import { Badge, Button, Input, JsonBlock, PageHeader, Panel, SectionTitle, StatusDot } from '../components/ui'
 import { numberFmt } from '../utils/format'
@@ -71,7 +72,7 @@ export default function MqttConnect() {
     try {
       const payload = buildPayload(row ?? {}, { ...settings, apiMode: 'mqtt' })
       const started = performance.now()
-      const raw = await mqttManager.publishAndWait(payload, settings.requestTimeoutMs ?? 15000)
+      const raw = await mqttManager.publishAndWait(payload, settings.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS)
       const rtt = Math.round(performance.now() - started)
       const prediction = parsePrediction(raw, row, 'mqtt', rtt)
       addPrediction(prediction)
@@ -149,12 +150,24 @@ export default function MqttConnect() {
               onChange={e => patchMqtt({ password: e.target.value })}
             />
           </div>
-          <Input
-            label="Client ID (auto-generated if blank)"
-            value={mqtt.clientId ?? ''}
-            onChange={e => patchMqtt({ clientId: e.target.value })}
-            placeholder="bms-web-abc123"
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Client ID (auto-generated if blank)"
+              value={mqtt.clientId ?? ''}
+              onChange={e => patchMqtt({ clientId: e.target.value })}
+              placeholder="bms-web-abc123"
+            />
+            <Input
+              label="Request Timeout (ms)"
+              type="number"
+              value={settings.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS}
+              onChange={e => {
+                const val = parseInt(e.target.value, 10)
+                updateSettings({ requestTimeoutMs: isNaN(val) ? DEFAULT_REQUEST_TIMEOUT_MS : val })
+              }}
+              placeholder="15000"
+            />
+          </div>
         </div>
       </Panel>
 

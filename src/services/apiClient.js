@@ -1,4 +1,4 @@
-import { getNumeric, UI_ONLY_FIELDS, MODEL_FEATURES, CLASS_LABELS } from '../config/schema'
+import { getNumeric, UI_ONLY_FIELDS, MODEL_FEATURES, CLASS_LABELS, DEFAULT_REQUEST_TIMEOUT_MS } from '../config/schema'
 import { useAppStore } from '../store/appStore'
 import { mqttManager } from './mqttClient'
 
@@ -125,7 +125,7 @@ export async function predictForMode(row, settings) {
 
   if (settings.apiMode === 'mqtt') {
     const started = performance.now()
-    const raw = await mqttManager.publishAndWait(payload, settings.requestTimeoutMs ?? 15000)
+    const raw = await mqttManager.publishAndWait(payload, settings.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS)
     const roundTripMs = Math.round(performance.now() - started)
     return { raw, roundTripMs, payload }
   }

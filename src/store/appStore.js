@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { DEFAULT_SETTINGS } from '../config/schema'
+import { DEFAULT_SETTINGS, DEFAULT_REQUEST_TIMEOUT_MS } from '../config/schema'
 import { createSampleDataset } from '../utils/sampleData'
 
 const initialDataset = createSampleDataset()
@@ -216,9 +216,9 @@ export const useAppStore = create(persist((set, get) => ({
         ...(persisted.settings.live ?? {}),
         sendWindow: false
       }
-      // Upgrade old 6 s timeout to 15 s so fast-interval streams don't self-abort
+      // Upgrade old 6 s timeout to default timeout so fast-interval streams don't self-abort
       if (!persisted.settings.requestTimeoutMs || persisted.settings.requestTimeoutMs <= 6000) {
-        persisted.settings.requestTimeoutMs = 15000
+        persisted.settings.requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS
       }
       // Seed mqtt defaults for users upgrading from pre-MQTT versions
       if (!persisted.settings.mqtt) {

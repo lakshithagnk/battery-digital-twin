@@ -11,6 +11,7 @@
  */
 
 import mqtt from 'mqtt'
+import { DEFAULT_REQUEST_TIMEOUT_MS } from '../config/schema'
 
 class MqttClientManager {
   constructor() {
@@ -109,7 +110,7 @@ class MqttClientManager {
    * predictionTopic.  Since the live engine is sequential (inFlightRef), only
    * one request is ever in-flight at a time, so a single pending resolver is safe.
    */
-  publishAndWait(payload, timeoutMs = 15000) {
+  publishAndWait(payload, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS) {
     return new Promise((resolve, reject) => {
       if (!this._client?.connected) {
         reject(new Error('MQTT not connected — please connect on the MQTT Settings page first.'))
