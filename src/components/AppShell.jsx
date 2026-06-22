@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation, Link } from 'react-router-dom'
 import { useAppStore } from '../store/appStore'
-import { Badge, StatusDot, Button } from './ui'
+import { Badge, StatusDot, Button, Input } from './ui'
 import { useLiveEngine } from '../hooks/useLiveEngine'
+import { mqttManager } from '../services/mqttClient'
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: '⬡' },
@@ -75,6 +76,63 @@ export default function AppShell({ children }) {
     '/logs': 'Logs'
   }
   const pageLabel = pageLabels[location.pathname] ?? 'Dashboard'
+
+  // Interactive MQTT Login Overlay State
+  const [showLogin, setShowLogin] = useState(false)
+  const [localUser, setLocalUser] = useState(settings.mqtt?.username ?? '')
+  const [localPass, setLocalPass] = useState(settings.mqtt?.password ?? '')
+  const [isConnecting, setIsConnecting] = useState(false)
+  const [connectError, setConnectError] = useState(null)
+  const addLog = useAppStore(state => state.addLog)
+  const setConnection = useAppStore(state => state.setConnection)
+
+  // Show login overlay on initial mount if not connected
+  useEffect(() => {
+    if (connection.mqttStatus !== 'online') {
+      setShowLogin(true)
+    }
+  }, [])
+
+  // Keep local user/password credentials updated if settings change
+  useEffect(() => {
+    setLocalUser(settings.mqtt?.username ?? '')
+    setLocalPass(settings.mqtt?.password ?? '')
+  }, [settings.mqtt?.username, settings.mqtt?.password])
+
+
+  const handleMqttConnect = () => {
+    setIsConnecting(true)
+    setConnectError(null)
+
+    const updatedSettings = {
+      ...settings,
+      apiMode: 'mqtt',
+      mqtt: {
+        ...settings.mqtt,
+        username: localUser,
+        password: localPass
+      }
+    }
+
+    updateSettings(updatedSettings)
+
+    mqttManager.connect(updatedSettings, (status, detail) => {
+      // Update connection status in appStore
+      setConnection({ mqttStatus: status })
+
+      if (status === 'online') {
+        setIsConnecting(false)
+        setShowLogin(false)
+        addLog('info', 'mqtt', 'Successfully connected to MQTT broker via login popup.')
+      } else if (status === 'error') {
+        setIsConnecting(false)
+        setConnectError(detail ?? 'Failed to connect. Please check credentials.')
+        addLog('error', 'mqtt', `MQTT login popup error: ${detail ?? 'unknown'}`)
+      } else if (status === 'offline') {
+        setIsConnecting(false)
+      }
+    })
+  }
 
   return (
     <div className="app-bg grid-bg min-h-screen overflow-hidden text-ink-100">
@@ -185,6 +243,83 @@ export default function AppShell({ children }) {
           </main>
         </div>
       </div>
+
+      {/* ── Premium Interactive MQTT Login Modal ───────────────────────────────── */}
+      {showLogin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-overlay">
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/15 bg-night-950/90 p-6 shadow-2xl backdrop-blur-2xl animate-modal-card">
+            {/* Glow spots */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-brand-cyan/20 blur-3xl opacity-60" />
+            <div className="pointer-events-none absolute -left-16 -bottom-16 h-36 w-36 rounded-full bg-brand-blue/20 blur-3xl opacity-60" />
+            
+            {/* Header info */}
+            <div className="text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-cyan/35 bg-brand-cyan/15 text-2xl shadow-blue animate-pulse">
+                ⇄
+              </div>
+              <h3 className="mt-4 font-display text-xl font-black tracking-tight text-white sm:text-2xl">
+                Login
+              </h3>
+            </div>
+
+            {/* Inputs */}
+            <div className="mt-6 space-y-4">
+              <Input
+                label="MQTT Username"
+                value={localUser}
+                onChange={e => setLocalUser(e.target.value)}
+                placeholder="e.g. fypG21"
+                disabled={isConnecting}
+                className="focus-within:border-brand-cyan/50 transition"
+              />
+              <Input
+                label="MQTT Password"
+                type="password"
+                value={localPass}
+                onChange={e => setLocalPass(e.target.value)}
+                placeholder="••••••••"
+                disabled={isConnecting}
+                className="focus-within:border-brand-cyan/50 transition"
+              />
+            </div>
+
+            {/* Connection error report */}
+            {connectError && (
+              <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs font-bold text-red-400">
+                ✗ {connectError}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="mt-6 space-y-3">
+              <Button
+                variant="cyan"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold shadow-blue hover:scale-[1.01] active:scale-[0.99] transition duration-150"
+                onClick={handleMqttConnect}
+                disabled={isConnecting}
+              >
+                {isConnecting ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+                    Connecting to Broker…
+                  </>
+                ) : (
+                  'Connect to Broker'
+                )}
+              </Button>
+
+              <button
+                type="button"
+                className="w-full flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] py-2.5 text-xs font-bold text-ink-300 hover:bg-white/[0.08] hover:text-white transition duration-150"
+                onClick={() => setShowLogin(false)}
+                disabled={isConnecting}
+              >
+                Configure Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
