@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-night-950 text-ink-100 font-sans;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button, input, select, textarea { font: inherit; }
+  ::selection { background: rgba(0, 212, 255, 0.25); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: rgba(8, 17, 31, 0.8); }
+  ::-webkit-scrollbar-thumb { @apply rounded-full bg-night-500; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-brand-blue; }
+}
+
+@layer components {
+  .app-bg {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(47, 124, 246, 0.30), transparent 28%),
+      radial-gradient(circle at 84% 14%, rgba(0, 212, 255, 0.18), transparent 30%),
+      radial-gradient(circle at 55% 95%, rgba(139, 92, 246, 0.14), transparent 30%),
+      linear-gradient(135deg, #050816 0%, #08111f 45%, #071729 100%);
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .glass {
+    @apply border border-white/10 bg-white/[0.065] backdrop-blur-xl shadow-soft;
+  }
+  .panel {
+    @apply glass rounded-3xl;
+  }
+  .panel-soft {
+    @apply rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl;
+  }
+  .mini-card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.05] p-4;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-brand-blue text-white hover:bg-blue-500 shadow-blue;
+  }
+  .btn-cyan {
+    @apply btn bg-brand-cyan text-night-950 hover:bg-cyan-300;
+  }
+  .btn-green {
+    @apply btn bg-brand-green text-night-950 hover:bg-emerald-300;
+  }
+  .btn-danger {
+    @apply btn border border-brand-red/40 bg-brand-red/15 text-red-100 hover:bg-brand-red/25;
+  }
+  .btn-ghost {
+    @apply btn border border-white/10 bg-white/[0.055] text-ink-200 hover:border-brand-cyan/50 hover:bg-white/[0.09];
+  }
+  .input {
+    @apply w-full rounded-2xl border border-white/10 bg-night-900/80 px-4 py-3 text-sm text-ink-100 outline-none transition placeholder:text-ink-500 focus:border-brand-cyan/70 focus:ring-2 focus:ring-brand-cyan/15;
+  }
+  .label {
+    @apply mb-2 block text-xs font-black uppercase tracking-[0.18em] text-ink-400;
+  }
+  .mono {
+    @apply font-mono text-xs;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-black;
+  }
+  .badge-blue { @apply badge border-brand-blue/35 bg-brand-blue/15 text-blue-100; }
+  .badge-cyan { @apply badge border-brand-cyan/35 bg-brand-cyan/15 text-cyan-100; }
+  .badge-green { @apply badge border-brand-green/35 bg-brand-green/15 text-emerald-100; }
+  .badge-amber { @apply badge border-brand-amber/35 bg-brand-amber/15 text-amber-100; }
+  .badge-red { @apply badge border-brand-red/35 bg-brand-red/15 text-red-100; }
+  .badge-violet { @apply badge border-brand-violet/35 bg-brand-violet/15 text-violet-100; }
+  .badge-slate { @apply badge border-white/10 bg-white/[0.06] text-ink-300; }
+  .dot { @apply h-2.5 w-2.5 rounded-full; }
+  .dot-green { @apply dot bg-brand-green shadow-[0_0_18px_rgba(0,229,155,.8)]; }
+  .dot-amber { @apply dot bg-brand-amber shadow-[0_0_18px_rgba(255,176,32,.7)]; }
+  .dot-red { @apply dot bg-brand-red shadow-[0_0_18px_rgba(255,77,109,.75)]; }
+  .dot-blue { @apply dot bg-brand-blue shadow-[0_0_18px_rgba(47,124,246,.75)]; }
+  .dot-idle { @apply dot bg-ink-500; }
+  .table-th { @apply sticky top-0 z-10 border-b border-white/10 bg-night-900/95 px-3 py-3 text-left text-[11px] font-black uppercase tracking-wider text-ink-400 backdrop-blur; }
+  .table-td { @apply border-b border-white/5 px-3 py-3 text-sm text-ink-200; }
+}
+
+.recharts-tooltip-wrapper { outline: none; }
+.recharts-default-tooltip {
+  background: #08111f !important;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  border-radius: 16px !important;
+  color: #f8fbff !important;
+}
+.recharts-cartesian-grid line { stroke: rgba(255,255,255,0.055); }
