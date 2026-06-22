@@ -23,7 +23,7 @@ export default function Logs() {
   }
 
   return (
-    <div className="mx-auto w-full space-y-6">
+    <div className="mx-auto w-full space-y-4 md:space-y-6">
       <PageHeader
         eyebrow=""
         title="Inference History & System Logs"
@@ -36,7 +36,7 @@ export default function Logs() {
         }
       />
 
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-4 md:space-y-6">
         <Panel>
           <div className="flex items-center justify-between mb-4">
             <div>

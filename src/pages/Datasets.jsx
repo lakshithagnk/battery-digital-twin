@@ -100,14 +100,14 @@ export default function Datasets() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
       <PageHeader
         eyebrow="Dataset Management"
         title="Manage & Preview Battery Files"
       />
 
-      <div className="grid gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
-        <div className="space-y-5">
+      <div className="grid gap-4 md:gap-5 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)]">
+        <div className="space-y-4 md:space-y-5">
           <UploadBox />
           <Panel>
             <SectionTitle eyebrow="Datasets" title="Available Files" />
@@ -151,7 +151,7 @@ export default function Datasets() {
           </Panel>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4 md:space-y-5">
           <Panel>
             <SectionTitle
               eyebrow="Dataset Viewer"

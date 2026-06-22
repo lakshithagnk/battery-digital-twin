@@ -90,7 +90,7 @@ export default function MqttConnect() {
   const isOnline = mqttStatus === 'online'
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-4 md:space-y-6">
       <PageHeader
         title="MQTT Settings"
         description="Connect via an MQTT cloud broker — works from GitHub Pages over the internet."
@@ -144,7 +144,7 @@ export default function MqttConnect() {
             onChange={e => patchMqtt({ brokerUrl: e.target.value })}
             placeholder="wss://xxxx.s1.eu.hivemq.cloud:8884/mqtt"
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label="Username (leave blank if public broker)"
               value={mqtt.username ?? ''}

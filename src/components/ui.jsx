@@ -3,10 +3,10 @@ import { safeJson } from '../utils/format'
 
 export function PageHeader({ eyebrow, title, description, actions }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mb-4 md:mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         {eyebrow && <p className="mb-2 text-xs font-black uppercase tracking-[0.32em] text-brand-cyan">{eyebrow}</p>}
-        <h1 className="font-display text-3xl font-black tracking-tight text-white lg:text-4xl">{title}</h1>
+        <h1 className="font-display text-2xl sm:text-3xl font-black tracking-tight text-white lg:text-4xl">{title}</h1>
         {description && <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-300">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -15,11 +15,11 @@ export function PageHeader({ eyebrow, title, description, actions }) {
 }
 
 export function Panel({ children, className }) {
-  return <section className={clsx('panel p-5', className)}>{children}</section>
+  return <section className={clsx('panel p-4 sm:p-5', className)}>{children}</section>
 }
 
 export function SoftPanel({ children, className }) {
-  return <section className={clsx('panel-soft p-5', className)}>{children}</section>
+  return <section className={clsx('panel-soft p-4 sm:p-5', className)}>{children}</section>
 }
 
 export function StatCard({ label, value, unit, sub, tone = 'blue', children }) {

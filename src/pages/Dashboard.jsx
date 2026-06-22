@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge, Button, PageHeader, Panel, SectionTitle, StatCard } from '../components/ui'
 import { CellVoltageBar, ConfidenceGauge, TrendChart } from '../components/charts'
@@ -26,6 +26,13 @@ function toneFor(prediction) {
 
 export default function Dashboard() {
   const [expandedChart, setExpandedChart] = useState(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const latest = useAppStore(state => state.latestPrediction)
   const history = useAppStore(state => state.predictionHistory)
   const settings = useAppStore(state => state.settings)
@@ -41,7 +48,7 @@ export default function Dashboard() {
   const faultTone = latest?.fault ? toneFor(latest.class_name) : latest ? 'green' : 'slate'
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
       <PageHeader
         eyebrow=""
         title="Battery Anomaly Monitoring Dashboard"
@@ -51,13 +58,13 @@ export default function Dashboard() {
 
       <Panel className="overflow-hidden p-0">
         <div className="grid gap-0 lg:grid-cols-[1.35fr_0.65fr]">
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="mb-5 flex flex-wrap items-center gap-3">
               <Badge tone={settings.apiMode === 'esp32' ? 'cyan' : 'violet'}>{settings.apiMode.toUpperCase()}</Badge>
               <Badge tone={faultTone}>{latest?.class_name ?? 'Waiting'}</Badge>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
               <StatCard tone="blue" label="Voltage" value={showValues ? numberFmt(latest?.values?.SUM_VOLTAGE ?? getNumeric(displayRow, 'SUM_VOLTAGE', 0), 2) : '—'} unit="V" sub="Pack voltage" />
               <StatCard tone="cyan" label="Current" value={showValues ? numberFmt(latest?.values?.SUM_CURRENT ?? getNumeric(displayRow, 'SUM_CURRENT', 0), 3) : '—'} unit="A" sub="Pack current" />
               <StatCard tone="amber" label="Temperature" value={showValues ? numberFmt(latest?.values?.MAX_TEMP ?? getNumeric(displayRow, 'MAX_TEMP', 0), 1) : '—'} unit="°C" sub="Maximum temperature" />
@@ -65,7 +72,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="border-t border-white/10 bg-white/[0.035] p-6 lg:border-l lg:border-t-0">
+          <div className="border-t border-white/10 bg-white/[0.035] p-4 sm:p-6 lg:border-l lg:border-t-0">
             <div className="flex h-full flex-col items-center justify-center text-center">
               <ConfidenceGauge value={latest?.confidence ?? 0} />
               <p className="mt-2 font-display text-2xl font-black text-white">{latest?.class_name ?? 'No Prediction'}</p>
@@ -79,7 +86,7 @@ export default function Dashboard() {
         </div>
       </Panel>
 
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="grid gap-4 md:gap-5 xl:grid-cols-2">
         <Panel>
           <SectionTitle
             eyebrow="Graph"
@@ -97,7 +104,7 @@ export default function Dashboard() {
           {chartData.length > 1 ? (
             <TrendChart
               data={chartData}
-              height={285}
+              height={isMobile ? 220 : 285}
               series={CELL_VOLTAGE_FIELDS.map((field, idx) => ({
                 key: field,
                 name: `V${idx + 1}`,
@@ -127,7 +134,7 @@ export default function Dashboard() {
           {chartData.length > 1 ? (
             <TrendChart
               data={chartData}
-              height={285}
+              height={isMobile ? 220 : 285}
               series={[{ key: 'current', name: 'Current A', color: '#00d4ff' }]}
             />
           ) : (
@@ -136,7 +143,7 @@ export default function Dashboard() {
         </Panel>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+      <div className="grid gap-4 md:gap-5 xl:grid-cols-[0.85fr_1.15fr]">
         <Panel>
           <SectionTitle
             eyebrow="Latest Row"
@@ -152,7 +159,7 @@ export default function Dashboard() {
             }
           />
           {displayRow ? (
-            <CellVoltageBar row={displayRow} height={300} />
+            <CellVoltageBar row={displayRow} height={isMobile ? 220 : 300} />
           ) : (
             <div className="flex h-[300px] items-center justify-center rounded-3xl border border-dashed border-white/10 text-sm text-ink-400">
               No cell voltage data yet.
@@ -207,11 +214,11 @@ export default function Dashboard() {
                 {expandedChart === 'voltage' ? 'Voltage vs Time' : expandedChart === 'current' ? 'Current vs Time' : 'Individual Cell Voltages'}
               </h2>
             </div>
-            <div className="flex-1 min-h-[400px] lg:min-h-[500px]">
+            <div className="flex-1 min-h-[300px] lg:min-h-[500px]">
               {expandedChart === 'voltage' && (
                 <TrendChart
                   data={chartData}
-                  height={500}
+                  height={isMobile ? 320 : 500}
                   series={CELL_VOLTAGE_FIELDS.map((field, idx) => ({
                     key: field,
                     name: `V${idx + 1}`,
@@ -223,15 +230,15 @@ export default function Dashboard() {
               {expandedChart === 'current' && (
                 <TrendChart
                   data={chartData}
-                  height={500}
+                  height={isMobile ? 320 : 500}
                   series={[{ key: 'current', name: 'Current A', color: '#00d4ff', strokeWidth: 3 }]}
                 />
               )}
               {expandedChart === 'cellVoltage' && (
                 displayRow ? (
-                  <CellVoltageBar row={displayRow} height={500} />
+                  <CellVoltageBar row={displayRow} height={isMobile ? 320 : 500} />
                 ) : (
-                  <div className="flex h-[500px] items-center justify-center rounded-3xl border border-dashed border-white/10 text-sm text-ink-400">
+                  <div className="flex h-[320px] lg:h-[500px] items-center justify-center rounded-3xl border border-dashed border-white/10 text-sm text-ink-400">
                     No cell voltage data yet.
                   </div>
                 )

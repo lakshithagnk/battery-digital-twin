@@ -165,13 +165,13 @@ export default function AppShell({ children }) {
               )}
               <Button
                 variant={settings.apiMode === 'esp32' ? 'cyan' : 'ghost'}
-                className="px-3 py-1.5 text-xs font-bold transition"
+                className="hidden md:inline-flex px-3 py-1.5 text-xs font-bold transition"
                 onClick={useEsp32Mode}
               >
                 Use ESP32 HTTP
               </Button>
               <select
-                className="rounded-2xl border border-white/10 bg-night-900/80 px-3 py-1.5 text-xs font-bold text-ink-200 hover:border-brand-cyan/50 hover:bg-white/[0.09] outline-none transition cursor-pointer"
+                className="hidden sm:inline-block rounded-2xl border border-white/10 bg-night-900/80 px-3 py-1.5 text-xs font-bold text-ink-200 hover:border-brand-cyan/50 hover:bg-white/[0.09] outline-none transition cursor-pointer"
                 value={settings.live?.intervalMs ?? 10000}
                 onChange={e => updateSettings(s => ({ live: { ...s.live, intervalMs: Number(e.target.value) } }))}
               >

@@ -55,7 +55,7 @@ export default function Esp32Connect() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-4 md:space-y-6">
       <PageHeader
         title="HTTP Connection"
         description=""
@@ -68,9 +68,9 @@ export default function Esp32Connect() {
       />
 
       <div className="w-full">
-        <div className="space-y-5">
+        <div className="space-y-4 md:space-y-5">
           <Panel>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="mini-card"><p className="label">SSID</p><p className="mt-2 break-all font-black text-white">{settings.esp32.ssid}</p></div>
               <div className="mini-card"><p className="label">Password</p><p className="mt-2 font-mono font-black text-white">{settings.esp32.password}</p></div>
               <div className="mini-card"><p className="label">Device IP</p><p className="mt-2 font-mono font-black text-white">192.168.4.1</p></div>
@@ -101,7 +101,7 @@ export default function Esp32Connect() {
           </Panel>
 
           <Panel>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="mini-card"><p className="label">HTTP</p><p className="mt-2 flex items-center gap-2 font-black text-white"><StatusDot status={connection.esp32Status} />{connection.esp32Status}</p></div>
               <div className="mini-card"><p className="label">Round Trip</p><p className="mt-2 font-display text-2xl font-black text-brand-cyan">{numberFmt(connection.lastRoundTripMs, 0)}</p><p className="text-xs text-ink-400">ms</p></div>
               <div className="mini-card"><p className="label">Mode</p><Badge tone={settings.apiMode === 'esp32' ? 'cyan' : 'slate'}>{settings.apiMode}</Badge></div>
