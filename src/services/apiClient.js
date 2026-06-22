@@ -125,7 +125,7 @@ export async function predictForMode(row, settings) {
 
   if (settings.apiMode === 'mqtt') {
     const started = performance.now()
-    const raw = await mqttManager.publishAndWait(payload, settings.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS)
+    const raw = await mqttManager.publishAndWait(payload, Math.max(settings.requestTimeoutMs || 0, DEFAULT_REQUEST_TIMEOUT_MS))
     const roundTripMs = Math.round(performance.now() - started)
     return { raw, roundTripMs, payload }
   }

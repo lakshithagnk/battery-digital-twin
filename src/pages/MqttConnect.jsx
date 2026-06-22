@@ -72,7 +72,7 @@ export default function MqttConnect() {
     try {
       const payload = buildPayload(row ?? {}, { ...settings, apiMode: 'mqtt' })
       const started = performance.now()
-      const raw = await mqttManager.publishAndWait(payload, settings.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS)
+      const raw = await mqttManager.publishAndWait(payload, Math.max(settings.requestTimeoutMs || 0, DEFAULT_REQUEST_TIMEOUT_MS))
       const rtt = Math.round(performance.now() - started)
       const prediction = parsePrediction(raw, row, 'mqtt', rtt)
       addPrediction(prediction)
@@ -160,10 +160,10 @@ export default function MqttConnect() {
             <Input
               label="Request Timeout (ms)"
               type="number"
-              value={settings.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS}
+              value={settings.requestTimeoutMs ?? ''}
               onChange={e => {
-                const val = parseInt(e.target.value, 10)
-                updateSettings({ requestTimeoutMs: isNaN(val) ? DEFAULT_REQUEST_TIMEOUT_MS : val })
+                const val = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0)
+                updateSettings({ requestTimeoutMs: val })
               }}
               placeholder="15000"
             />

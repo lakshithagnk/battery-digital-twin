@@ -126,7 +126,7 @@ class MqttClientManager {
       const timer = setTimeout(() => {
         this._resolver = null
         reject(new Error('MQTT response timeout — ESP32 did not publish a prediction in time.'))
-      }, timeoutMs)
+      }, DEFAULT_REQUEST_TIMEOUT_MS)
 
       this._resolver = { resolve, reject, timer }
 
