@@ -304,7 +304,7 @@ export default function AppShell({ children }) {
                     Connecting to Broker…
                   </>
                 ) : (
-                  'Connect to Broker'
+                  'Connect'
                 )}
               </Button>
 
