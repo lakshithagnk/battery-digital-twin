@@ -62,16 +62,12 @@ export function useLiveEngine() {
         error: null
       })
 
-      if (state.settings.apiMode === 'fastapi') setConnection({ fastapiStatus: 'online' })
-      if (state.settings.apiMode === 'esp32')   setConnection({ esp32Status: 'online' })
       if (state.settings.apiMode === 'mqtt')    setConnection({ mqttStatus: 'online' })
     } catch (error) {
       const isAbort = error.name === 'AbortError' || error.message?.includes('aborted') || error.message?.includes('abort')
       const errMsg = isAbort ? 'Request timed out — ESP32 did not respond in time.' : error.message
       addLog('warning', 'live', `Packet skipped: ${errMsg}`, { mode: state.settings.apiMode })
       setLive({ error: errMsg })
-      if (state.settings.apiMode === 'fastapi') setConnection({ fastapiStatus: 'error' })
-      if (state.settings.apiMode === 'esp32')   setConnection({ esp32Status: 'error' })
       if (state.settings.apiMode === 'mqtt')    setConnection({ mqttStatus: 'error' })
 
       // Add a 'No Response' entry carrying raw sensor values so charts still update.

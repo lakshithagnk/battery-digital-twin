@@ -9,8 +9,6 @@ function mergeSettings(base, update) {
   return {
     ...base,
     ...update,
-    esp32:   { ...base.esp32,   ...(update?.esp32   ?? {}) },
-    fastapi: { ...base.fastapi, ...(update?.fastapi ?? {}) },
     mock:    { ...base.mock,    ...(update?.mock    ?? {}) },
     live:    { ...base.live,    ...(update?.live    ?? {}) },
     mqtt:    { ...base.mqtt,    ...(update?.mqtt    ?? {}) }
@@ -55,8 +53,6 @@ export const useAppStore = create(persist((set, get) => ({
     error: null
   },
   connection: {
-    esp32Status: 'idle',
-    fastapiStatus: 'idle',
     mqttStatus: 'offline',
     lastRoundTripMs: null,
     lastConnectionTest: null
@@ -81,20 +77,6 @@ export const useAppStore = create(persist((set, get) => ({
   renameDataset: (id, name) => set(state => ({
     datasets: state.datasets.map(dataset => dataset.id === id ? { ...dataset, name, updatedAt: new Date().toISOString() } : dataset)
   })),
-
-  duplicateDataset: id => set(state => {
-    const source = state.datasets.find(dataset => dataset.id === id)
-    if (!source) return state
-    const copy = {
-      ...source,
-      id: crypto.randomUUID?.() ?? `${Date.now()}-copy`,
-      name: `${source.name} Copy`,
-      rows: source.rows.map((row, index) => ({ ...row, __id: crypto.randomUUID?.() ?? `${Date.now()}-${index}` })),
-      uploadedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-    return { datasets: [copy, ...state.datasets], activeDatasetId: copy.id }
-  }),
 
   removeDataset: id => set(state => {
     const remaining = state.datasets.filter(dataset => dataset.id !== id)
@@ -194,8 +176,6 @@ export const useAppStore = create(persist((set, get) => ({
     },
     connection: {
       ...state.connection,
-      esp32Status: 'idle',
-      fastapiStatus: 'idle',
       lastRoundTripMs: null,
       lastConnectionTest: null
     }
@@ -229,18 +209,8 @@ export const useAppStore = create(persist((set, get) => ({
     if (persisted?.settings) {
       persisted.settings.payloadShape = 'features'
       persisted.settings.includeMeta = false
-      persisted.settings.esp32 = {
-        ...(persisted.settings.esp32 ?? {}),
-        httpBaseUrl: 'http://192.168.4.1',
-        httpPredictEndpoint: '/data',
-        httpMethod: 'POST',
-        ssid: 'BatteryMonitor_AP',
-        password: 'battery123',
-        maxClients: 4
-      }
-      delete persisted.settings.esp32.protocol
-      delete persisted.settings.esp32.httpStatusEndpoint
-      delete persisted.settings.esp32.wsUrl
+      delete persisted.settings.esp32
+      delete persisted.settings.fastapi
       // Preserve user's selected speed; only set sendWindow default
       persisted.settings.live = {
         ...(persisted.settings.live ?? {}),

@@ -103,14 +103,6 @@ export default function MqttConnect() {
 
       {/* ── Architecture diagram ─────────────────────────────────────────── */}
       <Panel>
-        <SectionTitle eyebrow="How it works" title="Architecture" />
-        <div className="mt-4 rounded-2xl border border-white/10 bg-night-950/60 p-4 font-mono text-xs text-ink-300 leading-relaxed">
-          <p className="text-brand-cyan font-bold mb-2">Data Flow:</p>
-          <p>{'[Web App (GitHub Pages)] ──WSS──► [MQTT Broker] ◄──MQTT/TLS── [ESP32]'}</p>
-          <br />
-          <p className="text-ink-400">Publish features  → <span className="text-white">{mqtt.featuresTopic}</span></p>
-          <p className="text-ink-400">Receive prediction ← <span className="text-white">{mqtt.predictionTopic}</span></p>
-        </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="mini-card">
             <p className="label">Status</p>
@@ -166,25 +158,6 @@ export default function MqttConnect() {
         </div>
       </Panel>
 
-      {/* ── Topics ───────────────────────────────────────────────────────── */}
-      <Panel>
-        <SectionTitle eyebrow="Topics" title="Pub / Sub Topics" />
-        <div className="mt-4 space-y-4">
-          <Input
-            label="Publish features to (ESP32 subscribes here)"
-            value={mqtt.featuresTopic ?? ''}
-            onChange={e => patchMqtt({ featuresTopic: e.target.value })}
-            placeholder="battery/features"
-          />
-          <Input
-            label="Receive predictions from (ESP32 publishes here)"
-            value={mqtt.predictionTopic ?? ''}
-            onChange={e => patchMqtt({ predictionTopic: e.target.value })}
-            placeholder="battery/prediction"
-          />
-        </div>
-      </Panel>
-
       {/* ── Test ─────────────────────────────────────────────────────────── */}
       <Panel>
         <SectionTitle eyebrow="Test" title="Send Test Packet" />
@@ -208,56 +181,6 @@ export default function MqttConnect() {
             </div>
           )}
           {testResult?.raw && <JsonBlock data={testResult.raw} label="ESP32 response" />}
-        </div>
-      </Panel>
-
-      {/* ── ESP32 firmware guide ─────────────────────────────────────────── */}
-      <Panel>
-        <SectionTitle eyebrow="ESP32 Firmware" title="Required Firmware Changes" />
-        <div className="mt-4 space-y-3 text-sm text-ink-300">
-          <p>The ESP32 must switch from HTTP to MQTT. Add these to your firmware:</p>
-          <div className="rounded-2xl border border-white/10 bg-night-950/70 p-4 font-mono text-xs text-ink-200 overflow-x-auto leading-relaxed">
-            <p className="text-brand-cyan">{'// 1. Install: PubSubClient + WiFiClientSecure libraries'}</p>
-            <p>{'#include <WiFiClientSecure.h>'}</p>
-            <p>{'#include <PubSubClient.h>'}</p>
-            <br />
-            <p className="text-brand-cyan">{'// 2. Connect to HOME WiFi (not AP mode)'}</p>
-            <p>{'WiFi.begin("YourHomeWiFi", "password");'}</p>
-            <br />
-            <p className="text-brand-cyan">{'// 3. Connect to MQTT broker'}</p>
-            <p>{`mqtt.setServer("${(mqtt.brokerUrl ?? '').replace('wss://', '').replace(':8884/mqtt', '')}",  8883);`}</p>
-            <p>{'mqtt.connect(clientId, username, password);'}</p>
-            <p>{`mqtt.subscribe("${mqtt.featuresTopic}");`}</p>
-            <br />
-            <p className="text-brand-cyan">{'// 4. In callback: run inference, publish result'}</p>
-            <p>{'void onMessage(char* topic, byte* data, unsigned int len) {'}</p>
-            <p>{'  // Parse JSON → features[] → run inference'}</p>
-            <p>{`  mqtt.publish("${mqtt.predictionTopic}", result_json);`}</p>
-            <p>{'}'}</p>
-          </div>
-          <p className="text-xs text-ink-500">
-            Note: Use port 8883 for MQTT/TLS on the ESP32 side.
-            The browser uses port 8884/WSS — they connect to the same broker.
-          </p>
-        </div>
-      </Panel>
-
-      {/* ── Broker recommendations ───────────────────────────────────────── */}
-      <Panel>
-        <SectionTitle eyebrow="Free Brokers" title="Recommended MQTT Brokers" />
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          {[
-            { name: 'HiveMQ Cloud', url: 'hivemq.com', free: '10 connections, 10 GB/mo', note: 'Best for production', tone: 'cyan' },
-            { name: 'EMQX Cloud', url: 'emqx.com', free: '1M msgs/month', note: 'Scalable', tone: 'green' },
-            { name: 'broker.hivemq.com', url: '', free: 'Unlimited (public)', note: 'For testing only — no auth', tone: 'slate' }
-          ].map(b => (
-            <div key={b.name} className="mini-card">
-              <Badge tone={b.tone}>{b.note}</Badge>
-              <p className="mt-2 font-black text-white text-sm">{b.name}</p>
-              <p className="text-xs text-ink-400 mt-1">{b.free}</p>
-              {b.url && <p className="text-xs text-brand-cyan mt-1">{b.url}</p>}
-            </div>
-          ))}
         </div>
       </Panel>
     </div>

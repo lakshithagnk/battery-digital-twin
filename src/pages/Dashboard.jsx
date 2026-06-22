@@ -60,7 +60,7 @@ export default function Dashboard() {
         <div className="grid gap-0 lg:grid-cols-[1.35fr_0.65fr]">
           <div className="p-4 sm:p-6">
             <div className="mb-5 flex flex-wrap items-center gap-3">
-              <Badge tone={settings.apiMode === 'esp32' ? 'cyan' : 'violet'}>{settings.apiMode.toUpperCase()}</Badge>
+              <Badge tone={settings.apiMode === 'mqtt' ? 'cyan' : 'violet'}>{settings.apiMode.toUpperCase()}</Badge>
               <Badge tone={faultTone}>{latest?.class_name ?? 'Waiting'}</Badge>
             </div>
 

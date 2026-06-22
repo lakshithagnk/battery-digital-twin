@@ -1,6 +1,14 @@
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
-import { DATASET_COLUMNS, normalizeDatasetRow } from '../config/schema'
+import { DATASET_COLUMNS } from '../config/schema'
+
+function normalizeDatasetRow(row, index = 0) {
+  return {
+    ...(row || {}),
+    __id: crypto.randomUUID?.() ?? `${Date.now()}-${index}`,
+    __index: index
+  }
+}
 
 export function parseCsvFile(file) {
   return new Promise((resolve, reject) => {

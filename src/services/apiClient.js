@@ -2,12 +2,6 @@ import { getNumeric, UI_ONLY_FIELDS, MODEL_FEATURES, CLASS_LABELS } from '../con
 import { useAppStore } from '../store/appStore'
 import { mqttManager } from './mqttClient'
 
-function withTimeout(ms) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), ms)
-  return { signal: controller.signal, cancel: () => clearTimeout(timer) }
-}
-
 // ---- payload builders -------------------------------------------------------
 
 export function buildPayload(row, settings = {}) {
@@ -124,61 +118,10 @@ export function parsePrediction(raw = {}, row = {}, source = 'unknown', roundTri
   }
 }
 
-// ---- transports -------------------------------------------------------------
-
-export async function callHttpPredict({ url, method = 'POST', payload, timeoutMs = 6000 }) {
-  const { signal, cancel } = withTimeout(timeoutMs)
-  const started = performance.now()
-  try {
-    const response = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal
-    })
-    const text = await response.text()
-    let json = {}
-    try { json = text ? JSON.parse(text) : {} } catch { json = { message: text } }
-    if (!response.ok) throw new Error(json.error ?? json.detail ?? json.message ?? `HTTP ${response.status}`)
-    return { raw: json, roundTripMs: Math.round(performance.now() - started) }
-  } finally {
-    cancel()
-  }
-}
-
-export async function callHealth(url, timeoutMs = 4000) {
-  const { signal, cancel } = withTimeout(timeoutMs)
-  const started = performance.now()
-  try {
-    const response = await fetch(url, { signal })
-    const text = await response.text()
-    let json = {}
-    try { json = text ? JSON.parse(text) : {} } catch { json = { message: text } }
-    if (!response.ok) throw new Error(json.detail ?? json.message ?? `HTTP ${response.status}`)
-    return { raw: json, roundTripMs: Math.round(performance.now() - started) }
-  } finally {
-    cancel()
-  }
-}
-
 // ---- mode routers -----------------------------------------------------------
 
 export async function predictForMode(row, settings) {
   const payload = buildPayload(row, settings)
-
-  if (settings.apiMode === 'mock') {
-    return {
-      raw: mockPrediction(row, settings),
-      roundTripMs: Math.round(settings.mock.latencyMin + Math.random() * (settings.mock.latencyMax - settings.mock.latencyMin)),
-      payload
-    }
-  }
-
-  if (settings.apiMode === 'fastapi') {
-    const url = `${trimUrl(settings.fastapi.baseUrl)}${settings.fastapi.predictEndpoint}`
-    const result = await callHttpPredict({ url, method: settings.fastapi.httpMethod, payload, timeoutMs: settings.requestTimeoutMs })
-    return { ...result, payload }
-  }
 
   if (settings.apiMode === 'mqtt') {
     const started = performance.now()
@@ -187,10 +130,12 @@ export async function predictForMode(row, settings) {
     return { raw, roundTripMs, payload }
   }
 
-  // Default: esp32 HTTP
-  const url = `${trimUrl(settings.esp32.httpBaseUrl)}${settings.esp32.httpPredictEndpoint}`
-  const result = await callHttpPredict({ url, method: 'POST', payload, timeoutMs: settings.requestTimeoutMs })
-  return { ...result, payload }
+  // Default: mock
+  return {
+    raw: mockPrediction(row, settings),
+    roundTripMs: Math.round(settings.mock.latencyMin + Math.random() * (settings.mock.latencyMax - settings.mock.latencyMin)),
+    payload
+  }
 }
 
 
@@ -252,6 +197,3 @@ export function mockPrediction(row, settings) {
   }
 }
 
-export function trimUrl(url) {
-  return String(url ?? '').replace(/\/+$/, '')
-}

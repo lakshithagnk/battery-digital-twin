@@ -11,8 +11,6 @@ const navItems = [
 
 function modeTone(mode) {
   if (mode === 'mock')    return 'violet'
-  if (mode === 'esp32')   return 'cyan'
-  if (mode === 'fastapi') return 'green'
   if (mode === 'mqtt')    return 'amber'
   return 'slate'
 }
@@ -51,13 +49,6 @@ function SettingsDropdown() {
             <span className="text-lg">▦</span> Manage Datasets
           </Link>
           <Link
-            to="/esp32"
-            className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-ink-300 hover:bg-white/[0.08] hover:text-white transition"
-            onClick={() => setOpen(false)}
-          >
-            <span className="text-lg">⌁</span> HTTP Connection Settings
-          </Link>
-          <Link
             to="/mqtt"
             className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-ink-300 hover:bg-white/[0.08] hover:text-white transition"
             onClick={() => setOpen(false)}
@@ -81,22 +72,9 @@ export default function AppShell({ children }) {
   const pageLabels = {
     '/': 'Dashboard',
     '/datasets': 'Datasets',
-    '/esp32': 'HTTP Connection',
     '/logs': 'Logs'
   }
   const pageLabel = pageLabels[location.pathname] ?? 'Dashboard'
-
-  function useEsp32Mode() {
-    updateSettings(s => ({
-      apiMode: 'esp32',
-      payloadShape: 'features',
-      includeMeta: false,
-      live: {
-        ...(s.live ?? {}),
-        sendWindow: false
-      }
-    }))
-  }
 
   return (
     <div className="app-bg grid-bg min-h-screen overflow-hidden text-ink-100">
@@ -138,9 +116,7 @@ export default function AppShell({ children }) {
               <div className="mt-2 flex items-center justify-between">
                 <Badge tone={modeTone(settings.apiMode)}>{settings.apiMode.toUpperCase()}</Badge>
                 <StatusDot status={
-                  settings.apiMode === 'mock'    ? 'testing'
-                  : settings.apiMode === 'mqtt'  ? connection.mqttStatus ?? 'offline'
-                  : connection.esp32Status === 'online' ? 'online' : 'idle'
+                  settings.apiMode === 'mock' ? 'testing' : connection.mqttStatus ?? 'offline'
                 } />
               </div>
             </div>
@@ -163,13 +139,6 @@ export default function AppShell({ children }) {
                   <span className="h-2 w-2 animate-pulse rounded-full bg-brand-green" /> LIVE
                 </span>
               )}
-              <Button
-                variant={settings.apiMode === 'esp32' ? 'cyan' : 'ghost'}
-                className="hidden md:inline-flex px-3 py-1.5 text-xs font-bold transition"
-                onClick={useEsp32Mode}
-              >
-                Use ESP32 HTTP
-              </Button>
               <select
                 className="hidden sm:inline-block rounded-2xl border border-white/10 bg-night-900/80 px-3 py-1.5 text-xs font-bold text-ink-200 hover:border-brand-cyan/50 hover:bg-white/[0.09] outline-none transition cursor-pointer"
                 value={settings.live?.intervalMs ?? 10000}

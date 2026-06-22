@@ -55,7 +55,6 @@ export default function Datasets() {
   const activeDatasetId = useAppStore(state => state.activeDatasetId)
   const setActiveDataset = useAppStore(state => state.setActiveDataset)
   const renameDataset = useAppStore(state => state.renameDataset)
-  const duplicateDataset = useAppStore(state => state.duplicateDataset)
   const removeDataset = useAppStore(state => state.removeDataset)
   const addLog = useAppStore(state => state.addLog)
   const active = useAppStore(state => state.getActiveDataset())
@@ -136,10 +135,6 @@ export default function Datasets() {
                       const name = prompt('New dataset name', dataset.name)
                       if (name) renameDataset(dataset.id, name)
                     }}>Rename</Button>
-                    <Button variant="ghost" className="h-7 px-2.5 text-[10px]" onClick={(e) => {
-                      e.stopPropagation()
-                      duplicateDataset(dataset.id)
-                    }}>Duplicate</Button>
                     <Button variant="danger" className="h-7 px-2.5 text-[10px] !border-brand-red/20 !bg-brand-red/10 !text-brand-red hover:!bg-brand-red/20" onClick={(e) => {
                       e.stopPropagation()
                       removeDataset(dataset.id)
