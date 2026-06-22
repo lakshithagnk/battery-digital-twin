@@ -175,10 +175,10 @@ export default function Dashboard() {
                 <tr>
                   <th className="table-th">Time</th>
                   <th className="table-th">Prediction</th>
-                  <th className="table-th">Window</th>
-                  <th className="table-th">Fault</th>
+                  <th className="table-th hidden sm:table-cell">Window</th>
+                  <th className="table-th hidden sm:table-cell">Fault</th>
                   <th className="table-th">Confidence</th>
-                  <th className="table-th">Latency</th>
+                  <th className="table-th hidden sm:table-cell">Latency</th>
                 </tr>
               </thead>
               <tbody>
@@ -186,10 +186,10 @@ export default function Dashboard() {
                   <tr key={item.id} className="hover:bg-white/[0.035]">
                     <td className="table-td font-mono text-xs">{shortTime(item.time)}</td>
                     <td className="table-td"><Badge tone={toneFor(item.class_name)}>{item.class_name}</Badge></td>
-                    <td className="table-td">{item.window_ready === true ? 'Ready' : item.window_ready === false ? 'Filling' : '—'}</td>
-                    <td className="table-td">{item.fault ? 'Yes' : 'No'}</td>
+                    <td className="table-td hidden sm:table-cell">{item.window_ready === true ? 'Ready' : item.window_ready === false ? 'Filling' : '—'}</td>
+                    <td className="table-td hidden sm:table-cell">{item.fault ? 'Yes' : 'No'}</td>
                     <td className="table-td">{item.confidence != null ? percentFmt(item.confidence) : '—'}</td>
-                    <td className="table-td">{item.latency_ms != null ? `${numberFmt(item.latency_ms, 1)} ms` : '—'}</td>
+                    <td className="table-td hidden sm:table-cell">{item.latency_ms != null ? `${numberFmt(item.latency_ms, 1)} ms` : '—'}</td>
                   </tr>
                 ))}
                 {!history.length && <tr><td className="table-td text-center text-ink-400" colSpan="6">No responses yet.</td></tr>}

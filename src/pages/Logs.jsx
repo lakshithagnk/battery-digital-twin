@@ -53,9 +53,9 @@ export default function Logs() {
                   <th className="table-th">Time</th>
                   <th className="table-th">Prediction</th>
                   <th className="table-th">Confidence</th>
-                  <th className="table-th">Latency</th>
-                  <th className="table-th">Status / Info</th>
-                  <th className="table-th">Ground Truth</th>
+                  <th className="table-th hidden sm:table-cell">Latency</th>
+                  <th className="table-th hidden sm:table-cell">Status / Info</th>
+                  <th className="table-th hidden sm:table-cell">Ground Truth</th>
                 </tr>
               </thead>
               <tbody>
@@ -68,9 +68,9 @@ export default function Logs() {
                       </Badge>
                     </td>
                     <td className="table-td font-mono">{item.confidence != null ? percentFmt(item.confidence) : '—'}</td>
-                    <td className="table-td font-mono">{item.round_trip_ms != null ? `${item.round_trip_ms} ms` : '—'}</td>
-                    <td className="table-td text-ink-300">{item.message || '—'}</td>
-                    <td className="table-td">
+                    <td className="table-td font-mono hidden sm:table-cell">{item.round_trip_ms != null ? `${item.round_trip_ms} ms` : '—'}</td>
+                    <td className="table-td text-ink-300 hidden sm:table-cell">{item.message || '—'}</td>
+                    <td className="table-td hidden sm:table-cell">
                       {item.row_reference?.fault_label ? (
                         <Badge tone={STATUS_COLORS[item.row_reference.fault_label] ?? 'slate'}>
                           {item.row_reference.fault_label}
