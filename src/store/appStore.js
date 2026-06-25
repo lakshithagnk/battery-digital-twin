@@ -19,6 +19,8 @@ export const useAppStore = create(persist((set, get) => ({
   settings: DEFAULT_SETTINGS,
   datasets: [initialDataset],
   activeDatasetId: initialDataset.id,
+  currentSessionNo: 1,
+  activeSessionNo: 1,
   latestPrediction: null,
   predictionHistory: [],
   logs: [
@@ -72,7 +74,33 @@ export const useAppStore = create(persist((set, get) => ({
     logs: [makeLog('info', 'dataset', `Dataset uploaded: ${dataset.name}`, { rows: dataset.rows.length }), ...state.logs].slice(0, 1200)
   })),
 
-  setActiveDataset: id => set({ activeDatasetId: id, playback: { ...get().playback, currentIndex: 0, state: 'idle', elapsedSeconds: 0 } }),
+  setActiveDataset: id => set(state => {
+    if (state.activeDatasetId === id) return {}
+    
+    const currentNo = typeof state.currentSessionNo === 'number' && !isNaN(state.currentSessionNo) ? state.currentSessionNo : 1
+    const nextSessionNo = currentNo + 1
+    const dataset = state.datasets.find(item => item.id === id)
+    const datasetName = dataset?.name ?? 'Unknown Dataset'
+    const newLog = makeLog('info', 'system', `Switched operating state to dataset "${datasetName}". Starting Session ${nextSessionNo}.`, { datasetId: id })
+    
+    return {
+      activeDatasetId: id,
+      currentSessionNo: nextSessionNo,
+      activeSessionNo: nextSessionNo,
+      playback: { ...state.playback, currentIndex: 0, state: 'idle', elapsedSeconds: 0 },
+      live: {
+        running: false,
+        cursor: 0,
+        tick: 0,
+        startedAt: null,
+        lastEmitAt: null,
+        totalEmitted: 0,
+        faultsSeen: 0,
+        error: null
+      },
+      logs: [newLog, ...state.logs].slice(0, 1200)
+    }
+  }),
 
   renameDataset: (id, name) => set(state => ({
     datasets: state.datasets.map(dataset => dataset.id === id ? { ...dataset, name, updatedAt: new Date().toISOString() } : dataset)
@@ -156,14 +184,32 @@ export const useAppStore = create(persist((set, get) => ({
     }
   }),
 
-  addPrediction: prediction => set(state => ({
-    latestPrediction: prediction,
-    predictionHistory: [prediction, ...state.predictionHistory].slice(0, 1000)
-  })),
+  addPrediction: prediction => set(state => {
+    const dataset = state.datasets.find(item => item.id === state.activeDatasetId)
+    const datasetName = dataset?.name ?? 'Unknown Dataset'
+    const sessionNo = typeof state.activeSessionNo === 'number' && !isNaN(state.activeSessionNo) ? state.activeSessionNo : 1
+    
+    // Find if we already have a start time for this session in history
+    const existing = state.predictionHistory.find(p => p.sessionNo === sessionNo)
+    const sessionStartTime = existing ? existing.sessionStartTime : prediction.time
+
+    const enriched = {
+      ...prediction,
+      sessionNo: sessionNo,
+      sessionDatasetName: datasetName,
+      sessionStartTime: sessionStartTime
+    }
+    return {
+      latestPrediction: enriched,
+      predictionHistory: [enriched, ...state.predictionHistory].slice(0, 1000)
+    }
+  }),
 
   clearPredictions: () => set(state => ({
     latestPrediction: null,
     predictionHistory: [],
+    currentSessionNo: 1,
+    activeSessionNo: 1,
     live: {
       running: false,
       cursor: 0,
@@ -195,11 +241,35 @@ export const useAppStore = create(persist((set, get) => ({
     settings: state.settings,
     datasets: state.datasets,
     activeDatasetId: state.activeDatasetId,
+    currentSessionNo: state.currentSessionNo,
+    activeSessionNo: state.activeSessionNo,
     predictionHistory: state.predictionHistory.slice(0, 200),
     latestPrediction: state.latestPrediction,
     logs: state.logs.slice(0, 300)
   }),
   migrate: (persisted) => {
+    if (persisted) {
+      if (persisted.currentSessionNo === undefined || isNaN(persisted.currentSessionNo)) {
+        persisted.currentSessionNo = 1
+      }
+      if (persisted.activeSessionNo === undefined || isNaN(persisted.activeSessionNo)) {
+        persisted.activeSessionNo = 1
+      }
+      if (persisted.predictionHistory) {
+        persisted.predictionHistory = persisted.predictionHistory.map(p => {
+          if (p.sessionNo === undefined || isNaN(p.sessionNo)) {
+            p.sessionNo = 1
+          }
+          if (!p.sessionDatasetName) {
+            p.sessionDatasetName = 'Real Discharge — vin_398'
+          }
+          if (!p.sessionStartTime) {
+            p.sessionStartTime = p.time
+          }
+          return p
+        })
+      }
+    }
     // Drop older persisted shapes and force the real ESP32 HTTP contract.
     if (persisted?.settings?.selectedFeatures) {
       const sf = persisted.settings.selectedFeatures

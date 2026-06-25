@@ -6,6 +6,7 @@ import { STATUS_COLORS } from '../config/schema'
 export default function Logs() {
   const logs = useAppStore(state => state.logs)
   const history = useAppStore(state => state.predictionHistory)
+  const activeSessionNo = useAppStore(state => state.activeSessionNo)
   const clearLogs = useAppStore(state => state.clearLogs)
   const clearPredictions = useAppStore(state => state.clearPredictions)
 
@@ -55,39 +56,56 @@ export default function Logs() {
                   <th className="table-th">Confidence</th>
                   <th className="table-th hidden sm:table-cell">Latency</th>
                   <th className="table-th hidden sm:table-cell">Status / Info</th>
-                  <th className="table-th hidden sm:table-cell">Ground Truth</th>
                 </tr>
               </thead>
               <tbody>
-                {history.map(item => (
-                  <tr key={item.id} className="hover:bg-white/[0.035]">
-                    <td className="table-td font-mono text-xs">{shortTime(item.time)}</td>
-                    <td className="table-td">
-                      <Badge tone={STATUS_COLORS[item.class_name] ?? (item.fault ? 'red' : 'slate')}>
-                        {item.class_name}
-                      </Badge>
-                    </td>
-                    <td className="table-td font-mono">{item.confidence != null ? percentFmt(item.confidence) : '—'}</td>
-                    <td className="table-td font-mono hidden sm:table-cell">{item.round_trip_ms != null ? `${item.round_trip_ms} ms` : '—'}</td>
-                    <td className="table-td text-ink-300 hidden sm:table-cell">{item.message || '—'}</td>
-                    <td className="table-td hidden sm:table-cell">
-                      {item.row_reference?.fault_label ? (
-                        <Badge tone={STATUS_COLORS[item.row_reference.fault_label] ?? 'slate'}>
-                          {item.row_reference.fault_label}
-                        </Badge>
-                      ) : (
-                        <span className="text-ink-500">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {!history.length && (
-                  <tr>
-                    <td className="table-td text-center text-ink-400" colSpan="6">
-                      No prediction history yet.
-                    </td>
-                  </tr>
-                )}
+                {(() => {
+                  const rows = []
+                  let lastSessionNo = null
+
+                  history.forEach((item) => {
+                    const itemSession = item.sessionNo || 1
+                    if (itemSession !== lastSessionNo) {
+                      const isActive = itemSession === activeSessionNo
+                      rows.push(
+                        <tr key={`session-divider-${itemSession}`} className={isActive ? "bg-brand-cyan/10 border-y border-brand-cyan/20 animate-in fade-in duration-200" : "bg-white/[0.03] border-y border-white/10"}>
+                          <td colSpan={5} className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-ink-300">
+                            <span className={isActive ? "text-brand-cyan" : "text-ink-400"}>
+                              Session {itemSession} — {shortTime(item.sessionStartTime || item.time)} {isActive && '(Active)'}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                      lastSessionNo = itemSession
+                    }
+
+                    rows.push(
+                      <tr key={item.id} className="hover:bg-white/[0.035]">
+                        <td className="table-td font-mono text-xs">{shortTime(item.time)}</td>
+                        <td className="table-td">
+                          <Badge tone={STATUS_COLORS[item.class_name] ?? (item.fault ? 'red' : 'slate')}>
+                            {item.class_name}
+                          </Badge>
+                        </td>
+                        <td className="table-td font-mono">{item.confidence != null ? percentFmt(item.confidence) : '—'}</td>
+                        <td className="table-td font-mono hidden sm:table-cell">{item.round_trip_ms != null ? `${item.round_trip_ms} ms` : '—'}</td>
+                        <td className="table-td text-ink-300 hidden sm:table-cell">{item.message || '—'}</td>
+                      </tr>
+                    )
+                  })
+
+                  if (!history.length) {
+                    return (
+                      <tr>
+                        <td className="table-td text-center text-ink-400" colSpan="5">
+                          No prediction history yet.
+                        </td>
+                      </tr>
+                    )
+                  }
+
+                  return rows
+                })()}
               </tbody>
             </table>
           </div>

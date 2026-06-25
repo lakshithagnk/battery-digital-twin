@@ -34,7 +34,7 @@ function TooltipBox({ active, payload, label }) {
   )
 }
 
-export function TrendChart({ data, series, height = 260 }) {
+export function TrendChart({ data = [], series, sessionChanges, height = 260 }) {
   const [brushRange, setBrushRange] = useState(null)
   const prevDataLengthRef = useRef(data?.length ?? 0)
   const firstElementKey = data && data.length > 0 ? data[0].label : null
@@ -170,6 +170,21 @@ export function TrendChart({ data, series, height = 260 }) {
           <XAxis dataKey="label" tick={{ fill: '#73829a', fontSize: 10 }} tickLine={false} />
           <YAxis domain={['auto', 'auto']} tick={{ fill: '#73829a', fontSize: 10 }} tickLine={false} axisLine={false} />
           <Tooltip content={<TooltipBox />} />
+          {sessionChanges && sessionChanges.map((change, idx) => (
+            <ReferenceLine
+              key={`session-change-${idx}`}
+              x={change.x}
+              stroke="rgba(0, 212, 255, 0.45)"
+              strokeDasharray="4 4"
+              label={{
+                value: `Session ${change.sessionNo}`,
+                fill: '#00d4ff',
+                fontSize: 9,
+                position: 'insideTopLeft',
+                offset: 4
+              }}
+            />
+          ))}
           {series.map(item => (
             <Line key={item.key} type={item.type ?? 'linear'} dataKey={item.key} name={item.name} stroke={item.color} strokeWidth={item.strokeWidth ?? 2.2} dot={item.dot ?? { r: 1.5, strokeWidth: 0 }} activeDot={{ r: 4 }} />
           ))}

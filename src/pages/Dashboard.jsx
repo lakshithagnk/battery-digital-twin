@@ -8,9 +8,34 @@ import { STATUS_COLORS, CELL_VOLTAGE_FIELDS, getNumeric } from '../config/schema
 
 
 function buildChartData(history) {
-  return [...history].reverse().map((item, index) => {
+  if (!history || history.length === 0) return { points: [], sessionChanges: [] }
+
+  const oldestItem = history[history.length - 1]
+  const oldestTimeParsed = oldestItem ? new Date(oldestItem.time).getTime() : 0
+  const startTimestamp = isNaN(oldestTimeParsed) || oldestTimeParsed === 0 ? new Date().getTime() : oldestTimeParsed
+
+  const sessionChanges = []
+  let lastSessionNo = null
+
+  const points = [...history].reverse().map((item) => {
+    const elapsedMs = new Date(item.time).getTime() - startTimestamp
+    const elapsedSec = Math.max(0, Math.round(elapsedMs / 1000))
+    const label = `${elapsedSec}s`
+
+    const itemSession = item.sessionNo || 1
+    if (itemSession !== lastSessionNo) {
+      if (lastSessionNo !== null) {
+        sessionChanges.push({
+          x: label,
+          sessionNo: itemSession,
+          datasetName: item.sessionDatasetName || 'Dataset'
+        })
+      }
+      lastSessionNo = itemSession
+    }
+
     const point = {
-      label: item.row_reference?.TIME ?? index,
+      label,
       current: item.values?.SUM_CURRENT ?? 0
     }
     CELL_VOLTAGE_FIELDS.forEach(field => {
@@ -18,6 +43,8 @@ function buildChartData(history) {
     })
     return point
   })
+
+  return { points, sessionChanges }
 }
 
 function toneFor(prediction) {
@@ -35,6 +62,7 @@ export default function Dashboard() {
 
   const latest = useAppStore(state => state.latestPrediction)
   const history = useAppStore(state => state.predictionHistory)
+  const activeSessionNo = useAppStore(state => state.activeSessionNo)
   const settings = useAppStore(state => state.settings)
   const updateSettings = useAppStore(state => state.updateSettings)
   const dataset = useAppStore(state => state.getActiveDataset())
@@ -44,7 +72,7 @@ export default function Dashboard() {
 
   const displayRow = latest ? latest.row : (history.length > 0 ? currentRow : null)
   const showValues = !!(latest || (history.length > 0 && displayRow))
-  const chartData = buildChartData(history)
+  const { points: chartData, sessionChanges } = buildChartData(history)
   const faultTone = latest?.fault ? toneFor(latest.class_name) : latest ? 'green' : 'slate'
 
   return (
@@ -104,6 +132,7 @@ export default function Dashboard() {
           {chartData.length > 1 ? (
             <TrendChart
               data={chartData}
+              sessionChanges={sessionChanges}
               height={isMobile ? 220 : 285}
               series={CELL_VOLTAGE_FIELDS.map((field, idx) => ({
                 key: field,
@@ -134,6 +163,7 @@ export default function Dashboard() {
           {chartData.length > 1 ? (
             <TrendChart
               data={chartData}
+              sessionChanges={sessionChanges}
               height={isMobile ? 220 : 285}
               series={[{ key: 'current', name: 'Current A', color: '#00d4ff' }]}
             />
@@ -182,17 +212,45 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {history.slice(0, 10).map(item => (
-                  <tr key={item.id} className="hover:bg-white/[0.035]">
-                    <td className="table-td font-mono text-xs">{shortTime(item.time)}</td>
-                    <td className="table-td"><Badge tone={toneFor(item.class_name)}>{item.class_name}</Badge></td>
-                    <td className="table-td hidden sm:table-cell">{item.window_ready === true ? 'Ready' : item.window_ready === false ? 'Filling' : '—'}</td>
-                    <td className="table-td hidden sm:table-cell">{item.fault ? 'Yes' : 'No'}</td>
-                    <td className="table-td">{item.confidence != null ? percentFmt(item.confidence) : '—'}</td>
-                    <td className="table-td hidden sm:table-cell">{item.latency_ms != null ? `${numberFmt(item.latency_ms, 1)} ms` : '—'}</td>
-                  </tr>
-                ))}
-                {!history.length && <tr><td className="table-td text-center text-ink-400" colSpan="6">No responses yet.</td></tr>}
+                {(() => {
+                  const sliced = history.slice(0, 10)
+                  const rows = []
+                  let lastSessionNo = null
+
+                  sliced.forEach((item) => {
+                    const itemSession = item.sessionNo || 1
+                    if (itemSession !== lastSessionNo) {
+                      const isActive = itemSession === activeSessionNo
+                      rows.push(
+                        <tr key={`session-divider-${itemSession}`} className={isActive ? "bg-brand-cyan/10 border-y border-brand-cyan/20 animate-in fade-in duration-200" : "bg-white/[0.03] border-y border-white/10"}>
+                          <td colSpan={6} className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-ink-300">
+                            <span className={isActive ? "text-brand-cyan" : "text-ink-400"}>
+                              Session {itemSession} — {shortTime(item.sessionStartTime || item.time)} {isActive && '(Active)'}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                      lastSessionNo = itemSession
+                    }
+
+                    rows.push(
+                      <tr key={item.id} className="hover:bg-white/[0.035]">
+                        <td className="table-td font-mono text-xs">{shortTime(item.time)}</td>
+                        <td className="table-td"><Badge tone={toneFor(item.class_name)}>{item.class_name}</Badge></td>
+                        <td className="table-td hidden sm:table-cell">{item.window_ready === true ? 'Ready' : item.window_ready === false ? 'Filling' : '—'}</td>
+                        <td className="table-td hidden sm:table-cell">{item.fault ? 'Yes' : 'No'}</td>
+                        <td className="table-td">{item.confidence != null ? percentFmt(item.confidence) : '—'}</td>
+                        <td className="table-td hidden sm:table-cell">{item.latency_ms != null ? `${numberFmt(item.latency_ms, 1)} ms` : '—'}</td>
+                      </tr>
+                    )
+                  })
+
+                  if (!history.length) {
+                    return <tr><td className="table-td text-center text-ink-400" colSpan="6">No responses yet.</td></tr>
+                  }
+
+                  return rows
+                })()}
               </tbody>
             </table>
           </div>
@@ -218,6 +276,7 @@ export default function Dashboard() {
               {expandedChart === 'voltage' && (
                 <TrendChart
                   data={chartData}
+                  sessionChanges={sessionChanges}
                   height={isMobile ? 320 : 500}
                   series={CELL_VOLTAGE_FIELDS.map((field, idx) => ({
                     key: field,
@@ -230,6 +289,7 @@ export default function Dashboard() {
               {expandedChart === 'current' && (
                 <TrendChart
                   data={chartData}
+                  sessionChanges={sessionChanges}
                   height={isMobile ? 320 : 500}
                   series={[{ key: 'current', name: 'Current A', color: '#00d4ff', strokeWidth: 3 }]}
                 />
