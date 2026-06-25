@@ -8,7 +8,7 @@ import { STATUS_COLORS, CELL_VOLTAGE_FIELDS, getNumeric } from '../config/schema
 
 
 function buildChartData(history) {
-  return [...history].reverse().slice(-80).map((item, index) => {
+  return [...history].reverse().map((item, index) => {
     const point = {
       label: item.row_reference?.TIME ?? index,
       current: item.values?.SUM_CURRENT ?? 0

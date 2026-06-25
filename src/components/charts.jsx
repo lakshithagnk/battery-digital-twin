@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react'
 import {
   Area,
   AreaChart,
@@ -11,7 +12,9 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
+  Brush,
+  ReferenceArea
 } from 'recharts'
 import { CELL_VOLTAGE_FIELDS, getNumeric } from '../config/schema'
 
@@ -32,18 +35,169 @@ function TooltipBox({ active, payload, label }) {
 }
 
 export function TrendChart({ data, series, height = 260 }) {
+  const [brushRange, setBrushRange] = useState(null)
+  const prevDataLengthRef = useRef(data?.length ?? 0)
+  const firstElementKey = data && data.length > 0 ? data[0].label : null
+
+  // Selection state for drag-to-zoom (using label values directly)
+  const [refAreaLeft, setRefAreaLeft] = useState('')
+  const [refAreaRight, setRefAreaRight] = useState('')
+
+  // Reset range if we switch datasets or clear history
+  useEffect(() => {
+    setBrushRange(null)
+    prevDataLengthRef.current = 0
+  }, [firstElementKey])
+
+  // Manage auto-scroll vs manual inspect state when data grows
+  useEffect(() => {
+    const currentLength = data?.length ?? 0
+    const prevLength = prevDataLengthRef.current
+    prevDataLengthRef.current = currentLength
+
+    if (currentLength === 0) {
+      setBrushRange(null)
+      return
+    }
+
+    setBrushRange(prevRange => {
+      if (!prevRange) {
+        return {
+          start: Math.max(0, currentLength - 30),
+          end: currentLength - 1
+        }
+      }
+
+      if (currentLength > prevLength) {
+        const wasAtEnd = prevRange.end >= prevLength - 1
+        if (wasAtEnd) {
+          return {
+            start: Math.max(0, currentLength - 30),
+            end: currentLength - 1
+          }
+        }
+      }
+
+      return {
+        start: Math.min(prevRange.start, currentLength - 1),
+        end: Math.min(prevRange.end, currentLength - 1)
+      }
+    })
+  }, [data?.length])
+
+  const showBrush = data && data.length > 20
+  const marginConfig = showBrush
+    ? { top: 8, right: 16, left: -18, bottom: 12 }
+    : { top: 8, right: 16, left: -18, bottom: 0 }
+
+  const handleBrushChange = (range) => {
+    if (range && typeof range.startIndex === 'number' && typeof range.endIndex === 'number') {
+      setBrushRange({
+        start: range.startIndex,
+        end: range.endIndex
+      })
+    }
+  }
+
+  // Mouse handlers for drag-to-zoom
+  const handleMouseDown = (e) => {
+    if (e && e.activeLabel !== undefined && e.activeLabel !== null) {
+      setRefAreaLeft(e.activeLabel)
+      setRefAreaRight(e.activeLabel)
+    }
+  }
+
+  const handleMouseMove = (e) => {
+    if (refAreaLeft && e && e.activeLabel !== undefined && e.activeLabel !== null) {
+      setRefAreaRight(e.activeLabel)
+    }
+  }
+
+  const handleMouseUp = () => {
+    if (refAreaLeft && refAreaRight) {
+      const startIndex = data.findIndex(d => String(d.label) === String(refAreaLeft))
+      const endIndex = data.findIndex(d => String(d.label) === String(refAreaRight))
+
+      if (startIndex !== -1 && endIndex !== -1) {
+        let start = Math.min(startIndex, endIndex)
+        let end = Math.max(startIndex, endIndex)
+
+        // Only zoom if selection covers at least 2 points
+        if (end - start >= 2) {
+          start = Math.max(0, start)
+          end = Math.min(data.length - 1, end)
+          setBrushRange({ start, end })
+        }
+      }
+    }
+    setRefAreaLeft('')
+    setRefAreaRight('')
+  }
+
+  const handleResetZoom = () => {
+    if (data && data.length > 0) {
+      setBrushRange({
+        start: Math.max(0, data.length - 30),
+        end: data.length - 1
+      })
+    }
+  }
+
+  const isZoomed = brushRange && data && (brushRange.start > 0 || brushRange.end < data.length - 1)
+
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 8, right: 16, left: -18, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="label" tick={{ fill: '#73829a', fontSize: 10 }} tickLine={false} />
-        <YAxis domain={['auto', 'auto']} tick={{ fill: '#73829a', fontSize: 10 }} tickLine={false} axisLine={false} />
-        <Tooltip content={<TooltipBox />} />
-        {series.map(item => (
-          <Line key={item.key} type={item.type ?? 'linear'} dataKey={item.key} name={item.name} stroke={item.color} strokeWidth={item.strokeWidth ?? 2.2} dot={item.dot ?? { r: 1.5, strokeWidth: 0 }} activeDot={{ r: 4 }} />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="relative w-full h-full">
+      {isZoomed && (
+        <button
+          onClick={handleResetZoom}
+          title="Reset Zoom"
+          className="absolute right-4 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-xl border border-brand-cyan/20 bg-night-900/90 text-sm font-black text-brand-cyan hover:bg-brand-cyan hover:text-night-950 transition-all shadow-soft backdrop-blur-md animate-in fade-in zoom-in duration-200"
+        >
+          ⟲
+        </button>
+      )}
+      <ResponsiveContainer width="100%" height={height}>
+        <LineChart
+          data={data}
+          margin={marginConfig}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={() => { setRefAreaLeft(''); setRefAreaRight(''); }}
+          style={{ cursor: refAreaLeft ? 'col-resize' : 'crosshair' }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="label" tick={{ fill: '#73829a', fontSize: 10 }} tickLine={false} />
+          <YAxis domain={['auto', 'auto']} tick={{ fill: '#73829a', fontSize: 10 }} tickLine={false} axisLine={false} />
+          <Tooltip content={<TooltipBox />} />
+          {series.map(item => (
+            <Line key={item.key} type={item.type ?? 'linear'} dataKey={item.key} name={item.name} stroke={item.color} strokeWidth={item.strokeWidth ?? 2.2} dot={item.dot ?? { r: 1.5, strokeWidth: 0 }} activeDot={{ r: 4 }} />
+          ))}
+          {refAreaLeft && refAreaRight && (
+            <ReferenceArea
+              x1={refAreaLeft}
+              x2={refAreaRight}
+              fill="#00d4ff"
+              fillOpacity={0.15}
+              stroke="rgba(0, 212, 255, 0.4)"
+            />
+          )}
+          {showBrush && brushRange && (
+            <Brush
+              dataKey="label"
+              height={10}
+              travellerWidth={4}
+              stroke="rgba(255, 255, 255, 0.12)"
+              fill="rgba(8, 17, 31, 0.9)"
+              tickFormatter={() => ''}
+              startIndex={brushRange.start}
+              endIndex={brushRange.end}
+              onChange={handleBrushChange}
+            />
+          )}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
 
