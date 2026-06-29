@@ -71,7 +71,7 @@ export const DEFAULT_SETTINGS = {
   mqtt: {
     brokerUrl: 'wss://85d119b1fc5546828fe0484af72962c3.s1.eu.hivemq.cloud:8884/mqtt',
     username: 'fypG21',
-    password: '',
+    password: '2026FYPg21',
     clientId: '',
     featuresTopic: 'battery/features',
     predictionTopic: 'battery/prediction',

@@ -82,8 +82,8 @@ export default function AppShell({ children }) {
 
   // Interactive MQTT Login Overlay State
   const [showLogin, setShowLogin] = useState(false)
-  const [localUser, setLocalUser] = useState(settings.mqtt?.username ?? '')
-  const [localPass, setLocalPass] = useState(settings.mqtt?.password ?? '')
+  const [localUser, setLocalUser] = useState(settings.mqtt?.username || 'fypG21')
+  const [localPass, setLocalPass] = useState(settings.mqtt?.password || '2026FYPg21')
   const [isConnecting, setIsConnecting] = useState(false)
   const [connectError, setConnectError] = useState(null)
   const addLog = useAppStore(state => state.addLog)
@@ -98,8 +98,8 @@ export default function AppShell({ children }) {
 
   // Keep local user/password credentials updated if settings change
   useEffect(() => {
-    setLocalUser(settings.mqtt?.username ?? '')
-    setLocalPass(settings.mqtt?.password ?? '')
+    setLocalUser(settings.mqtt?.username || 'fypG21')
+    setLocalPass(settings.mqtt?.password || '2026FYPg21')
   }, [settings.mqtt?.username, settings.mqtt?.password])
 
 

@@ -294,7 +294,7 @@ export const useAppStore = create(persist((set, get) => ({
       if (!persisted.settings.mqtt) {
         persisted.settings.mqtt = {
           brokerUrl: 'wss://broker.hivemq.com:8884/mqtt',
-          username: '', password: '', clientId: '',
+          username: 'fypG21', password: '2026FYPg21', clientId: '',
           featuresTopic: 'battery/features',
           predictionTopic: 'battery/prediction',
           statusTopic: 'battery/status'
