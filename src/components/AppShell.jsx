@@ -77,6 +77,9 @@ export default function AppShell({ children }) {
   }
   const pageLabel = pageLabels[location.pathname] ?? 'Dashboard'
 
+  // Representational-only toggle switch state
+  const [toggleVal, setToggleVal] = useState(settings.apiMode === 'mqtt' ? 'cloud' : 'sensor')
+
   // Interactive MQTT Login Overlay State
   const [showLogin, setShowLogin] = useState(false)
   const [localUser, setLocalUser] = useState(settings.mqtt?.username ?? '')
@@ -132,6 +135,10 @@ export default function AppShell({ children }) {
         setIsConnecting(false)
       }
     })
+  }
+
+  const handleToggleMode = (mode) => {
+    setToggleVal(mode)
   }
 
   return (
@@ -192,6 +199,35 @@ export default function AppShell({ children }) {
               <h2 className="font-display text-lg font-black text-white">{pageLabel}</h2>
             </div>
             <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+              {location.pathname === '/' && (
+                <div className="relative flex items-center rounded-2xl border border-white/10 bg-night-900/80 p-1 w-52 h-9 mr-2">
+                  <div
+                    className={`absolute top-1 bottom-1 left-1 rounded-xl transition-all duration-300 ease-out ${
+                      toggleVal === 'cloud'
+                        ? 'w-[calc(50%-4px)] translate-x-0 bg-brand-cyan/20 border border-brand-cyan/35'
+                        : 'w-[calc(50%-4px)] translate-x-[calc(100%+4px)] bg-brand-violet/20 border border-brand-violet/35'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    className={`relative z-10 flex-1 text-center text-xs font-black transition-colors duration-200 ${
+                      toggleVal === 'cloud' ? 'text-brand-cyan font-bold' : 'text-ink-300 hover:text-white'
+                    }`}
+                    onClick={() => handleToggleMode('cloud')}
+                  >
+                    Cloud
+                  </button>
+                  <button
+                    type="button"
+                    className={`relative z-10 flex-1 text-center text-xs font-black transition-colors duration-200 ${
+                      toggleVal === 'sensor' ? 'text-brand-violet font-bold' : 'text-ink-300 hover:text-white'
+                    }`}
+                    onClick={() => handleToggleMode('sensor')}
+                  >
+                    From Sensor
+                  </button>
+                </div>
+              )}
               {live.running && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-green/35 bg-brand-green/15 px-2.5 py-1 text-xs font-black text-emerald-100 mr-2">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-brand-green" /> LIVE
@@ -277,7 +313,7 @@ export default function AppShell({ children }) {
                 type="password"
                 value={localPass}
                 onChange={e => setLocalPass(e.target.value)}
-                placeholder="••••••••"
+                placeholder="2026FYPg21"
                 disabled={isConnecting}
                 className="focus-within:border-brand-cyan/50 transition"
               />

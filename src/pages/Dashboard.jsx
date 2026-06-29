@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge, Button, PageHeader, Panel, SectionTitle, StatCard } from '../components/ui'
-import { CellVoltageBar, ConfidenceGauge, TrendChart } from '../components/charts'
+import { CellVoltageBar, TrendChart } from '../components/charts'
 import { useAppStore } from '../store/appStore'
 import { numberFmt, percentFmt, shortTime } from '../utils/format'
 import { STATUS_COLORS, CELL_VOLTAGE_FIELDS, getNumeric } from '../config/schema'
@@ -102,11 +102,9 @@ export default function Dashboard() {
 
           <div className="border-t border-white/10 bg-white/[0.035] p-4 sm:p-6 lg:border-l lg:border-t-0">
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <ConfidenceGauge value={latest?.confidence ?? 0} />
               <p className="mt-2 font-display text-2xl font-black text-white">{latest?.class_name ?? 'No Prediction'}</p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <Badge tone={faultTone}>{latest?.fault ? 'Fault' : latest ? 'Normal / Waiting' : 'Idle'}</Badge>
-                {latest && <Badge tone="slate">{percentFmt(latest.confidence)}</Badge>}
                 {latest && <Badge tone="slate">{numberFmt(latest.latency_ms, 1)} ms</Badge>}
               </div>
             </div>
@@ -207,7 +205,6 @@ export default function Dashboard() {
                   <th className="table-th">Prediction</th>
                   <th className="table-th hidden sm:table-cell">Window</th>
                   <th className="table-th hidden sm:table-cell">Fault</th>
-                  <th className="table-th">Confidence</th>
                   <th className="table-th hidden sm:table-cell">Latency</th>
                 </tr>
               </thead>
@@ -223,7 +220,7 @@ export default function Dashboard() {
                       const isActive = itemSession === activeSessionNo
                       rows.push(
                         <tr key={`session-divider-${itemSession}`} className={isActive ? "bg-brand-cyan/10 border-y border-brand-cyan/20 animate-in fade-in duration-200" : "bg-white/[0.03] border-y border-white/10"}>
-                          <td colSpan={6} className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-ink-300">
+                          <td colSpan={5} className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-ink-300">
                             <span className={isActive ? "text-brand-cyan" : "text-ink-400"}>
                               Session {itemSession} — {shortTime(item.sessionStartTime || item.time)} {isActive && '(Active)'}
                             </span>
@@ -239,14 +236,13 @@ export default function Dashboard() {
                         <td className="table-td"><Badge tone={toneFor(item.class_name)}>{item.class_name}</Badge></td>
                         <td className="table-td hidden sm:table-cell">{item.window_ready === true ? 'Ready' : item.window_ready === false ? 'Filling' : '—'}</td>
                         <td className="table-td hidden sm:table-cell">{item.fault ? 'Yes' : 'No'}</td>
-                        <td className="table-td">{item.confidence != null ? percentFmt(item.confidence) : '—'}</td>
                         <td className="table-td hidden sm:table-cell">{item.latency_ms != null ? `${numberFmt(item.latency_ms, 1)} ms` : '—'}</td>
                       </tr>
                     )
                   })
 
                   if (!history.length) {
-                    return <tr><td className="table-td text-center text-ink-400" colSpan="6">No responses yet.</td></tr>
+                    return <tr><td className="table-td text-center text-ink-400" colSpan="5">No responses yet.</td></tr>
                   }
 
                   return rows
